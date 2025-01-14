@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, status
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlmodel import select
 
-from kovoc.api.models import VocabularyItem
+from kovoc.api.models import VocabularyItem, VocabularyItemDB
 from kovoc.utils import pg_session
 
 router = APIRouter(prefix="/vocabulary", tags=["vocabulary"])
@@ -11,7 +11,7 @@ router = APIRouter(prefix="/vocabulary", tags=["vocabulary"])
 @router.get("")
 async def get_vocabulary(
     english: str | None = None, korean: str | None = None
-) -> VocabularyItem:
+) -> VocabularyItemDB:
     if not (english or korean):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -19,11 +19,11 @@ async def get_vocabulary(
         )
 
     with pg_session() as session:
-        statement = select(VocabularyItem)
+        statement = select(VocabularyItemDB)
         if english:
-            statement = statement.where(VocabularyItem.english == english)
+            statement = statement.where(VocabularyItemDB.english == english)
         if korean:
-            statement = statement.where(VocabularyItem.korean == korean)
+            statement = statement.where(VocabularyItemDB.korean == korean)
         vocab = session.exec(statement).first()
 
     if not vocab:
@@ -45,9 +45,9 @@ async def post_vocabulary(vocabulary: VocabularyItem) -> VocabularyItem:
         except IntegrityError:
             session.rollback()
             statement = (
-                select(VocabularyItem)
-                .where(VocabularyItem.english == vocabulary.english)
-                .where(VocabularyItem.korean == vocabulary.korean)
+                select(VocabularyItemDB)
+                .where(VocabularyItemDB.english == vocabulary.english)
+                .where(VocabularyItemDB.korean == vocabulary.korean)
             )
             return session.exec(statement).one()
 
@@ -56,9 +56,9 @@ async def post_vocabulary(vocabulary: VocabularyItem) -> VocabularyItem:
 
 # TODO: with privileges
 @router.delete("/{id}")
-async def delete_vocabulary(vocab_id: int) -> VocabularyItem:
+async def delete_vocabulary(vocab_id: int) -> VocabularyItemDB:
     with pg_session() as session:
-        statement = select(VocabularyItem).where(VocabularyItem.id == vocab_id)
+        statement = select(VocabularyItemDB).where(VocabularyItemDB.id == vocab_id)
         try:
             vocab = session.exec(statement).one()
         except NoResultFound as exc:

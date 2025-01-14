@@ -25,6 +25,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer, primary_key=True),
         sa.Column("english", sa.Unicode(255), nullable=False),
         sa.Column("korean", sa.Unicode(255), nullable=False),
+        sa.Column("level", sa.Integer(), nullable=False),
     )
     op.create_unique_constraint("uq_translation", "vocabulary", ["english", "korean"])
 
