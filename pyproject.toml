@@ -10,14 +10,17 @@ ignore = [
     "D",
     "EM101",
     "EM102",
+    "FIX002",
     "PLR2004",
     "ISC001",
+    "TD",
     "TRY003",
 ]
 unfixable = [ # we don't want these to be autofixed on save
     "COM819", # conflicts with ruff format
     "F401",   # unpractical during dev
 ]
+exclude = ["alembic"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**.py" = [
@@ -36,7 +39,7 @@ force-sort-within-sections = true
 [tool.mypy]
 plugins = "pydantic.mypy"
 
-files = "stargazer"
+files = "kovoc"
 ignore_missing_imports = false
 follow_imports = "normal"
 
