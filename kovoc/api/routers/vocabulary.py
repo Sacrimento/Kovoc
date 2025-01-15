@@ -1,38 +1,33 @@
 from fastapi import APIRouter, HTTPException, status
+from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlmodel import select
 
-from kovoc.api.models import VocabularyItem, VocabularyItemDB
+from kovoc.api.models import (
+    Page,
+    Pagination,
+    VocabularyItem,
+    VocabularyItemDB,
+    paginate,
+)
 from kovoc.utils import pg_session
 
 router = APIRouter(prefix="/vocabulary", tags=["vocabulary"])
 
 
 @router.get("")
-async def get_vocabulary(
-    english: str | None = None, korean: str | None = None
-) -> VocabularyItemDB:
-    if not (english or korean):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="At least korean or english query parameter is required",
-        )
-
+async def get_vocabulary(pagination: Pagination) -> Page[VocabularyItemDB]:
     with pg_session() as session:
-        statement = select(VocabularyItemDB)
-        if english:
-            statement = statement.where(VocabularyItemDB.english == english)
-        if korean:
-            statement = statement.where(VocabularyItemDB.korean == korean)
-        vocab = session.exec(statement).first()
-
-    if not vocab:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No vocabulary item found for specified parameters",
+        statement = (
+            select(VocabularyItemDB)
+            .offset((pagination.page - 1) * pagination.limit)
+            .limit(pagination.limit)
         )
+        vocab = session.exec(statement).all()
 
-    return vocab
+        total = session.exec(func.count(VocabularyItemDB.id)).scalar()  # type: ignore[arg-type, call-overload]
+
+    return paginate(vocab, total, pagination.page, pagination.limit)
 
 
 # TODO: with privileges

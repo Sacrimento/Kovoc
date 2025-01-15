@@ -1,5 +1,5 @@
 -r requirements-prod.txt
 
-mypy==1.13.0
+mypy==1.14.1
 ruff==0.8.2
 pytest==8.3.4
